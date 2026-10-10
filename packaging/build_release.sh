@@ -41,7 +41,9 @@ fi
 export CODESIGN_IDENTITY
 
 VERSION="$(sed -n 's/^__version__ = "\(.*\)"/\1/p' "$ROOT/claude_menubar.py")"
-DMG="$DIST/ClaudeUsageMeter-$VERSION.dmg"
+# A fixed name, so releases/latest/download/ClaudeUsageMeter.dmg (the
+# website's and README's download link) always gets the newest version.
+DMG="$DIST/ClaudeUsageMeter.dmg"
 ZIP="$DIST/ClaudeUsageMeter-$VERSION.zip"
 REPO="victor-shammas/claude-usage-meter"
 
@@ -131,12 +133,6 @@ if (( NOTARIZE )); then
     spctl --assess --type execute --verbose=2 "$APP"
     spctl --assess --type open --context context:primary-signature --verbose=2 "$DMG"
 fi
-
-# Same DMG under a name that never changes, so the website can link to
-# releases/latest/download/ClaudeUsageMeter.dmg.
-cp "$DMG" "$DIST/ClaudeUsageMeter.dmg"
-(cd "$DIST" && shasum -a 256 "$(basename "$DMG")" > "$(basename "$DMG").sha256")
-cat "$DMG.sha256"
 
 echo "==> Done. Release assets in $DIST:"
 ls -1 "$DIST" | grep -v '\.app$'

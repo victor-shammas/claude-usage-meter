@@ -2,7 +2,7 @@
 
 One channel: a **GitHub release** on `victor-shammas/claude-usage-meter` with a notarized DMG for new installs, and a signed Sparkle appcast and zip that installed copies update from. The app is built by `packaging/build_release.sh`.
 
-Installed copies read `releases/latest/download/appcast.xml` (`SUFeedURL` in `packaging/ClaudeUsageMeter.spec`), which always points at the newest release, so **every release must carry its own `appcast.xml`**. The website's download button points at `releases/latest/download/ClaudeUsageMeter.dmg`, so every release also carries the DMG under that fixed name.
+Installed copies read `releases/latest/download/appcast.xml` (`SUFeedURL` in `packaging/ClaudeUsageMeter.spec`), which always points at the newest release, so **every release must carry its own `appcast.xml`**. The website's download button points at `releases/latest/download/ClaudeUsageMeter.dmg`, so the DMG always has that fixed name.
 
 ## What you need
 
@@ -22,14 +22,13 @@ Sparkle 2.10.0 is downloaded into `.sparkle/` (git-ignored) on the first build a
    ```bash
    NOTARY_PROFILE=quoth-notary packaging/build_release.sh
    ```
-   It builds and signs the app with Sparkle embedded, notarizes and staples the app, then writes `dist/ClaudeUsageMeter-X.Y.Z.zip` and a signed `dist/appcast.xml`. It also notarizes and staples the DMG, copies it to `dist/ClaudeUsageMeter.dmg`, and writes its `.sha256`. The run ends with a Gatekeeper check of the app and the DMG.
+   It builds and signs the app with Sparkle embedded, notarizes and staples the app, then writes `dist/ClaudeUsageMeter-X.Y.Z.zip` and a signed `dist/appcast.xml`. It also notarizes and staples `dist/ClaudeUsageMeter.dmg`. The run ends with a Gatekeeper check of the app and the DMG.
 4. **Commit and push**, then tag: `git tag -a vX.Y.Z -m vX.Y.Z && git push origin main vX.Y.Z`. The appcast's download links point at `releases/download/vX.Y.Z/`, so the tag must match the version.
 5. **Publish.**
    ```bash
    gh release create vX.Y.Z -R victor-shammas/claude-usage-meter --verify-tag \
      --title "vX.Y.Z: <headline>" --notes-file <notes.md> \
-     dist/ClaudeUsageMeter-X.Y.Z.dmg dist/ClaudeUsageMeter.dmg \
-     dist/ClaudeUsageMeter-X.Y.Z.dmg.sha256 dist/ClaudeUsageMeter-X.Y.Z.zip dist/appcast.xml
+     dist/ClaudeUsageMeter.dmg dist/ClaudeUsageMeter-X.Y.Z.zip dist/appcast.xml
    ```
 6. **Check.** Both https://github.com/victor-shammas/claude-usage-meter/releases/latest/download/appcast.xml and `…/latest/download/ClaudeUsageMeter.dmg` should resolve to the new release. An installed older copy should offer the update from **Check for Updates…**.
 7. **Update the Apps project board** card "Claude Usage Meter — GitHub release" (Version).
