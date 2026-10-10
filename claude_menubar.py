@@ -16,7 +16,7 @@ Claude Code stays in sync.
 Requirements: pip install rumps pyobjc-framework-Cocoa
 """
 
-__version__ = "1.5.0"
+__version__ = "1.5.1"
 
 import getpass
 import json
@@ -594,7 +594,7 @@ class ClaudeUsageApp(rumps.App):
             self._reauth_item,
             None,
             rumps.MenuItem("About Claude Usage Meter", callback=self._show_about),
-            *([rumps.MenuItem("Check for Updates…", callback=self._check_for_updates)]
+            *([rumps.MenuItem("Check for Updates", callback=self._check_for_updates)]
               if self._updater else []),
             *([self._login_item] if self._login_item is not None else []),
             None,

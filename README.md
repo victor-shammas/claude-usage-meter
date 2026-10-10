@@ -24,7 +24,7 @@ Click it to see progress bars and time until each window resets.
 3. Launch it from Applications. The meter appears in the menu bar. It has no Dock icon.
 4. Click the meter and choose **Launch at Login** to start it automatically. It then shows up under System Settings → General → Login Items.
 
-The app is signed with a Developer ID and notarized by Apple, so it opens without Gatekeeper warnings. It checks for updates once a day and installs them with [Sparkle](https://sparkle-project.org); choose **Check for Updates…** in the menu to check right away. (Version 1.4.0 predates this, so update from it by hand once.)
+The app is signed with a Developer ID and notarized by Apple, so it opens without Gatekeeper warnings. It checks for updates once a day and installs them with [Sparkle](https://sparkle-project.org); choose **Check for Updates** in the menu to check right away. (Version 1.4.0 predates this, so update from it by hand once.)
 
 ### Requirements
 
@@ -148,9 +148,14 @@ Install `pyobjc-framework-Cocoa` (included in `requirements.txt`). The app uses 
 
 ## Changelog
 
+### v1.5.1
+
+- The menu item now reads **Check for Updates**, without the trailing ellipsis.
+- The first release delivered by Sparkle: 1.5.0 installs it from the menu.
+
 ### v1.5.0
 
-- **Automatic updates** with Sparkle: a daily background check, plus **Check for Updates…** in the menu. Updates are signed with the app's own EdDSA key and verified before installing.
+- **Automatic updates** with Sparkle: a daily background check, plus **Check for Updates** in the menu. Updates are signed with the app's own EdDSA key and verified before installing.
 - **New icon** in the house style of Quoth, Plainview and Gaugeline: three amber usage bars on an espresso tile.
 - **Website** at [victorshammas.com/claude-usage-meter](https://victorshammas.com/claude-usage-meter/), with support and privacy pages.
 - A fixed download link that always points at the newest DMG: `releases/latest/download/ClaudeUsageMeter.dmg`.

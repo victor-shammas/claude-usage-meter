@@ -30,7 +30,7 @@ Sparkle 2.10.0 is downloaded into `.sparkle/` (git-ignored) on the first build a
      --title "vX.Y.Z: <headline>" --notes-file <notes.md> \
      dist/ClaudeUsageMeter.dmg dist/ClaudeUsageMeter-X.Y.Z.zip dist/appcast.xml
    ```
-6. **Check.** Both https://github.com/victor-shammas/claude-usage-meter/releases/latest/download/appcast.xml and `…/latest/download/ClaudeUsageMeter.dmg` should resolve to the new release. An installed older copy should offer the update from **Check for Updates…**.
+6. **Check.** Both https://github.com/victor-shammas/claude-usage-meter/releases/latest/download/appcast.xml and `…/latest/download/ClaudeUsageMeter.dmg` should resolve to the new release. An installed older copy should offer the update from **Check for Updates**.
 7. **Update the Apps project board** card "Claude Usage Meter — GitHub release" (Version).
 
 ## Website
