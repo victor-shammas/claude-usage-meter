@@ -41,5 +41,10 @@ app = BUNDLE(
         "LSUIElement": True,  # menu bar only: no Dock icon, no app menu
         "LSApplicationCategoryType": "public.app-category.developer-tools",
         "NSHumanReadableCopyright": "MIT License · Victor Shammas",
+        # Sparkle: installed copies read the appcast attached to the newest
+        # GitHub release, signed with this app's own EdDSA key.
+        "SUFeedURL": "https://github.com/victor-shammas/claude-usage-meter/releases/latest/download/appcast.xml",
+        "SUPublicEDKey": "YcyOMs8nPQy1vvc7jO87O/tVi3uKrHK2ISxJIzOCyrg=",
+        "SUEnableAutomaticChecks": True,
     },
 )

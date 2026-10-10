@@ -6,3 +6,4 @@ venv/
 build/
 dist/
 packaging/AppIcon-preview.png
+.sparkle/

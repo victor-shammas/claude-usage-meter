@@ -1,5 +1,7 @@
 #!/bin/bash
-# Build, sign, notarize and package "Claude Usage Meter.app" into a DMG.
+# Build, sign, notarize and package "Claude Usage Meter.app" for release:
+# a DMG for new installs, plus the zip and signed Sparkle appcast that
+# installed copies update from. Everything lands in dist/.
 #
 #   packaging/build_release.sh                 # full signed + notarized release
 #   packaging/build_release.sh --no-notarize   # signed local build only
@@ -11,6 +13,9 @@
 #   - Homebrew Python 3 (brew install python)
 #   - A "Developer ID Application" certificate in the login Keychain.
 #   - Notary credentials:  xcrun notarytool store-credentials notary --team-id <TEAMID>
+#   - This app's Sparkle private key in the login Keychain, under the account
+#     "claude-usage-meter" (Sparkle's generate_keys --account claude-usage-meter).
+#     Its public half is SUPublicEDKey in ClaudeUsageMeter.spec.
 #
 # Overridable via environment: PYTHON, CODESIGN_IDENTITY, NOTARY_PROFILE.
 set -euo pipefail
@@ -37,10 +42,27 @@ export CODESIGN_IDENTITY
 
 VERSION="$(sed -n 's/^__version__ = "\(.*\)"/\1/p' "$ROOT/claude_menubar.py")"
 DMG="$DIST/ClaudeUsageMeter-$VERSION.dmg"
+ZIP="$DIST/ClaudeUsageMeter-$VERSION.zip"
+REPO="victor-shammas/claude-usage-meter"
+
+SPARKLE_VERSION="2.10.0"
+SPARKLE_SHA256="c2bf58aa8387266ac179357b1415d6f2635f044da8be41042af32425dae6da0c"
+SPARKLE="$ROOT/.sparkle/$SPARKLE_VERSION"
+SPARKLE_KEY_ACCOUNT="claude-usage-meter"
 
 echo "==> Claude Usage Meter $VERSION"
 echo "    Python:   $PYTHON ($("$PYTHON" --version))"
 echo "    Identity: $CODESIGN_IDENTITY"
+
+if [[ ! -d "$SPARKLE/Sparkle.framework" ]]; then
+    echo "==> Fetching Sparkle $SPARKLE_VERSION"
+    mkdir -p "$SPARKLE"
+    curl -fsSL -o "$SPARKLE/sparkle.tar.xz" \
+        "https://github.com/sparkle-project/Sparkle/releases/download/$SPARKLE_VERSION/Sparkle-$SPARKLE_VERSION.tar.xz"
+    echo "$SPARKLE_SHA256  $SPARKLE/sparkle.tar.xz" | shasum -a 256 -c -
+    tar -xJf "$SPARKLE/sparkle.tar.xz" -C "$SPARKLE"
+    rm "$SPARKLE/sparkle.tar.xz"
+fi
 
 echo "==> Preparing build venv"
 rm -rf "$BUILD" "$DIST"
@@ -52,6 +74,16 @@ rm -rf "$BUILD" "$DIST"
 echo "==> Building app (PyInstaller signs every binary with the hardened runtime)"
 "$BUILD/venv/bin/pyinstaller" --noconfirm --clean \
     --workpath "$BUILD/pyinstaller" --distpath "$DIST" "$HERE/ClaudeUsageMeter.spec"
+
+echo "==> Embedding Sparkle"
+FW="$APP/Contents/Frameworks/Sparkle.framework"
+ditto "$SPARKLE/Sparkle.framework" "$FW"
+# The XPC services are only for sandboxed apps; this one isn't sandboxed.
+rm -rf "$FW/Versions/B/XPCServices" "$FW/XPCServices"
+# Sign inside-out with the hardened runtime, as Sparkle's docs prescribe.
+for item in "$FW/Versions/B/Autoupdate" "$FW/Versions/B/Updater.app" "$FW"; do
+    codesign --force --timestamp --options runtime --sign "$CODESIGN_IDENTITY" "$item"
+done
 
 # Re-sign the outer bundle so its seal covers the final Info.plist/resources.
 codesign --force --timestamp --options runtime \
@@ -71,6 +103,17 @@ if (( NOTARIZE )); then
     xcrun stapler staple "$APP"
 fi
 
+echo "==> Building update zip and appcast"
+ditto -c -k --sequesterRsrc --keepParent "$APP" "$ZIP"
+FEED="$BUILD/feed"
+mkdir -p "$FEED"
+cp "$ZIP" "$FEED/"
+"$SPARKLE/bin/generate_appcast" "$FEED" --account "$SPARKLE_KEY_ACCOUNT" \
+    --download-url-prefix "https://github.com/$REPO/releases/download/v$VERSION/"
+grep -q 'sparkle:edSignature' "$FEED/appcast.xml" \
+    || { echo "The appcast isn't signed: is the Sparkle key in this Keychain?"; exit 1; }
+cp "$FEED/appcast.xml" "$DIST/appcast.xml"
+
 echo "==> Building DMG"
 STAGE="$BUILD/dmg"
 mkdir -p "$STAGE"
@@ -89,5 +132,11 @@ if (( NOTARIZE )); then
     spctl --assess --type open --context context:primary-signature --verbose=2 "$DMG"
 fi
 
-shasum -a 256 "$DMG"
-echo "==> Done: $DMG"
+# Same DMG under a name that never changes, so the website can link to
+# releases/latest/download/ClaudeUsageMeter.dmg.
+cp "$DMG" "$DIST/ClaudeUsageMeter.dmg"
+(cd "$DIST" && shasum -a 256 "$(basename "$DMG")" > "$(basename "$DMG").sha256")
+cat "$DMG.sha256"
+
+echo "==> Done. Release assets in $DIST:"
+ls -1 "$DIST" | grep -v '\.app$'

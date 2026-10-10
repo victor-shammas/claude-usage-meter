@@ -1,10 +1,13 @@
-# Claude Usage Meter
+<p align="center"><img src="docs/icon.png" width="128" height="128" alt="Claude Usage Meter icon"></p>
 
-A macOS menu bar app that shows your Claude usage quota at a glance.
+<h1 align="center">Claude Usage Meter</h1>
 
-![menu bar screenshot](screenshots/menubar.png)
+<p align="center">Your Claude usage limits, at a glance in the Mac menu bar.<br>
+<a href="https://github.com/victor-shammas/claude-usage-meter/releases/latest/download/ClaudeUsageMeter.dmg"><b>Download for Mac</b></a> · <a href="https://victorshammas.com/claude-usage-meter/">Website</a> · Free and open source</p>
 
-Shows your usage at a glance in the menu bar:
+<p align="center"><img src="screenshots/menubar.png" width="178" alt="Menu bar: 5h:21%  7d:36%  F5:20%"></p>
+
+The menu bar shows:
 
 - **5h** — the 5-hour rolling window (how much you've used in the current session window)
 - **7d** — the 7-day weekly quota (cumulative usage over the past week)
@@ -12,16 +15,16 @@ Shows your usage at a glance in the menu bar:
 
 Click it to see progress bars and time until each window resets.
 
-![dropdown screenshot](screenshots/dropdown.png)
+<p align="center"><img src="screenshots/dropdown.png" width="700" alt="The dropdown: a progress bar and reset countdown for each limit"></p>
 
 ## Install
 
-1. Download **ClaudeUsageMeter-x.y.z.dmg** from the [latest release](https://github.com/victor-shammas/claude-usage-meter/releases/latest).
+1. Download **[ClaudeUsageMeter.dmg](https://github.com/victor-shammas/claude-usage-meter/releases/latest/download/ClaudeUsageMeter.dmg)** from the latest release.
 2. Open it and drag **Claude Usage Meter** into **Applications**.
 3. Launch it from Applications. The meter appears in the menu bar. It has no Dock icon.
 4. Click the meter and choose **Launch at Login** to start it automatically. It then shows up under System Settings → General → Login Items.
 
-The app is signed with a Developer ID and notarized by Apple, so it opens without Gatekeeper warnings.
+The app is signed with a Developer ID and notarized by Apple, so it opens without Gatekeeper warnings. It checks for updates once a day and installs them with [Sparkle](https://sparkle-project.org); choose **Check for Updates…** in the menu to check right away. (Version 1.4.0 predates this, so update from it by hand once.)
 
 ### Requirements
 
@@ -70,7 +73,9 @@ launchctl unload ~/Library/LaunchAgents/com.claude-usage-menubar.plist
 
 ### Building the app
 
-`packaging/build_release.sh` builds `Claude Usage Meter.app` with PyInstaller, signs it with your Developer ID (hardened runtime), notarizes and staples it, and packages a signed DMG in `dist/`. It uses Homebrew's Python (so the app is Apple Silicon only and requires the macOS release that Python was built for) and a notarytool keychain profile (named `notary`, or set `NOTARY_PROFILE`). Pass `--no-notarize` for a quick signed local build.
+`packaging/build_release.sh` builds `Claude Usage Meter.app` with PyInstaller, embeds Sparkle, signs everything with your Developer ID (hardened runtime), notarizes and staples it, and writes the release assets to `dist/`: the DMG, the update zip and the signed Sparkle `appcast.xml`. See [RELEASING.md](RELEASING.md) for the full release steps. Pass `--no-notarize` for a quick signed local build.
+
+The website in `docs/` is served by GitHub Pages at [victorshammas.com/claude-usage-meter](https://victorshammas.com/claude-usage-meter/). `packaging/make_icon.py` draws the app icon and the site's icons.
 
 ## How it finds your token
 
@@ -142,6 +147,15 @@ This prints the credential source, token expiry, the User-Agent, and the raw HTT
 Install `pyobjc-framework-Cocoa` (included in `requirements.txt`). The app uses it to hide the Dock icon. If it's not installed, everything works but you'll see the Python rocket in the Dock.
 
 ## Changelog
+
+### v1.5.0
+
+- **Automatic updates** with Sparkle: a daily background check, plus **Check for Updates…** in the menu. Updates are signed with the app's own EdDSA key and verified before installing.
+- **New icon** in the house style of Quoth, Plainview and Gaugeline: three amber usage bars on an espresso tile.
+- **Website** at [victorshammas.com/claude-usage-meter](https://victorshammas.com/claude-usage-meter/), with support and privacy pages.
+- A fixed download link that always points at the newest DMG: `releases/latest/download/ClaudeUsageMeter.dmg`.
+- **The whole menu uses the meters' monospaced typeface**, and Quit sits apart under its own separator.
+- **Fixed: Launch at Login was missing from the menu in 1.4.0.** If you installed 1.4.0, turn it on after updating.
 
 ### v1.4.0
 

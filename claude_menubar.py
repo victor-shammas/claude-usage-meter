@@ -16,7 +16,7 @@ Claude Code stays in sync.
 Requirements: pip install rumps pyobjc-framework-Cocoa
 """
 
-__version__ = "1.4.0"
+__version__ = "1.5.0"
 
 import getpass
 import json
@@ -485,6 +485,67 @@ def _login_service():
         return None
 
 
+def _set_mono_font(item):
+    """Give a clickable menu item the monospaced face of the meter rows.
+
+    Only the font is set, so macOS still colors the title for its
+    enabled/highlighted states.
+    """
+    try:
+        from AppKit import NSAttributedString, NSFont, NSFontAttributeName
+        font = NSFont.monospacedSystemFontOfSize_weight_(NSFont.systemFontSize(), 0.0)
+        item._menuitem.setAttributedTitle_(
+            NSAttributedString.alloc().initWithString_attributes_(
+                item.title, {NSFontAttributeName: font}
+            )
+        )
+    except Exception:
+        pass
+
+
+def _start_updater():
+    """Start Sparkle (bundled in the .app only); None when unavailable.
+
+    The feed URL and public key come from Info.plist (SUFeedURL,
+    SUPublicEDKey). Scheduled checks run in the background; the delegate tells
+    Sparkle it may show an update alert from this menu-bar-only app and
+    brings that alert to the front.
+    """
+    if not getattr(sys, "frozen", False):
+        return None
+    try:
+        import objc
+        from Foundation import NSBundle, NSObject
+
+        path = os.path.join(
+            NSBundle.mainBundle().privateFrameworksPath(), "Sparkle.framework"
+        )
+        bundle = NSBundle.bundleWithPath_(path)
+        if bundle is None or not bundle.load():
+            return None
+
+        class UserDriverDelegate(NSObject):
+            @objc.typedSelector(b"Z@:")
+            def supportsGentleScheduledUpdateReminders(self):
+                return True
+
+            @objc.typedSelector(b"v@:Z@@")
+            def standardUserDriverWillHandleShowingUpdate_forUpdate_state_(
+                self, handle, update, state
+            ):
+                from AppKit import NSApplication
+                NSApplication.sharedApplication().activateIgnoringOtherApps_(True)
+
+        delegate = UserDriverDelegate.alloc().init()
+        controller = objc.lookUpClass("SPUStandardUpdaterController").alloc()
+        controller = controller.initWithStartingUpdater_updaterDelegate_userDriverDelegate_(
+            True, None, delegate
+        )
+        return controller, delegate  # keep the delegate alive (weak in Sparkle)
+    except Exception:
+        return None
+
+
 def _launch_at_login_enabled():
     service = _login_service()
     if service is None:
@@ -522,6 +583,7 @@ class ClaudeUsageApp(rumps.App):
                 "Launch at Login", callback=self._toggle_launch_at_login,
             )
             self._login_item.state = _launch_at_login_enabled()
+        self._updater = _start_updater()
         self.menu = [
             rumps.MenuItem("5-Hour Window", callback=self._noop),
             rumps.MenuItem("Weekly Quota", callback=self._noop),
@@ -532,11 +594,19 @@ class ClaudeUsageApp(rumps.App):
             self._reauth_item,
             None,
             rumps.MenuItem("About Claude Usage Meter", callback=self._show_about),
-            *([self._login_item] if self._login_item else []),
+            *([rumps.MenuItem("Check for Updates…", callback=self._check_for_updates)]
+              if self._updater else []),
+            *([self._login_item] if self._login_item is not None else []),
+            None,
             rumps.MenuItem("Quit", callback=rumps.quit_application, key="q"),
         ]
         self._set_reauth_visible(False)
         self._set_fable_visible(False)
+        # The action rows share the meters' monospaced face, so the whole
+        # menu reads in one typeface.
+        for item in self.menu.values():
+            if isinstance(item, rumps.MenuItem) and item.callback not in (None, self._noop):
+                _set_mono_font(item)
 
         self.refresh(None)
         # If the first attempt failed (stale token, network not up yet at
@@ -549,6 +619,11 @@ class ClaudeUsageApp(rumps.App):
 
     def _noop(self, _):
         pass
+
+    def _check_for_updates(self, _):
+        from AppKit import NSApplication
+        NSApplication.sharedApplication().activateIgnoringOtherApps_(True)
+        self._updater[0].checkForUpdates_(None)
 
     def _show_about(self, _):
         """Standard macOS About panel, with donation and GitHub links."""

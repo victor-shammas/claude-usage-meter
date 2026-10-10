@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Support &amp; FAQ · Claude Usage Meter</title>
+<meta name="description" content="Help with Claude Usage Meter: installing, updates, menu bar messages, and removing the app.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="./"><img src="icon.png" alt="" width="30" height="30">Claude Usage Meter</a>
+    <nav class="nav" aria-label="Main">
+      <a href="./#features" class="hide-sm">Features</a>
+      <a href="privacy.html" class="hide-sm">Privacy</a>
+      <a href="support.html" aria-current="page">Support</a>
+    </nav>
+  </div>
+</header>
+
+<main class="doc">
+  <div class="wrap narrow">
+    <h1>Support &amp; FAQ</h1>
+    <p class="meta-line">Can't find your answer? Email <a href="mailto:contact+claude-usage-meter@victorshammas.com">contact+claude-usage-meter@victorshammas.com</a> or <a href="https://github.com/victor-shammas/claude-usage-meter/issues">open an issue on GitHub</a>.</p>
+
+    <ul class="toc">
+      <li><a href="#install">Installing</a></li>
+      <li><a href="#messages">Menu bar messages</a></li>
+      <li><a href="#updates">Updates</a></li>
+      <li><a href="#remove">Removing the app</a></li>
+    </ul>
+
+    <h2 id="install">Installing</h2>
+    <details open>
+      <summary>How do I install it?</summary>
+      <p><a href="https://github.com/victor-shammas/claude-usage-meter/releases/latest/download/ClaudeUsageMeter.dmg">Download the DMG</a>, open it and drag Claude Usage Meter into Applications, then open it from there. It lives in the menu bar and has no Dock icon. To start it automatically, click the meter and choose <strong>Launch at Login</strong>.</p>
+    </details>
+    <details id="not-visible">
+      <summary>The app is running but I can't see the meter</summary>
+      <p>On MacBooks with a notch, macOS hides menu bar items that would sit behind the camera when the menu bar is full. Make room by hiding other items: hold <kbd>⌘</kbd> and drag icons out of the menu bar, or turn some off in System Settings › Menu Bar. Then quit and reopen Claude Usage Meter.</p>
+    </details>
+    <details>
+      <summary>Which Macs does it run on?</summary>
+      <p>The app needs a Mac with Apple silicon and macOS 26 or later. On other Macs, you can run the Python version <a href="https://github.com/victor-shammas/claude-usage-meter#run-from-source">from source</a>, which works on macOS with Python 3.9 or later.</p>
+    </details>
+    <details>
+      <summary>I used the old Python script version. How do I switch?</summary>
+      <p>Remove the old login item first, or you'll see two meters:</p>
+      <pre><code>launchctl unload ~/Library/LaunchAgents/com.claude-usage-menubar.plist
+rm ~/Library/LaunchAgents/com.claude-usage-menubar.plist</code></pre>
+      <p>Then install the app as above.</p>
+    </details>
+
+    <h2 id="messages">Menu bar messages</h2>
+    <details>
+      <summary>"No token"</summary>
+      <p>The app couldn't find a Claude Code login on this Mac. Click the meter and choose <strong>Re-authenticate…</strong>, which opens Terminal and runs <code>claude /login</code>. Choose "Claude account with subscription". The meter updates by itself once you've signed in.</p>
+    </details>
+    <details>
+      <summary>"re-auth"</summary>
+      <p>Your Claude Code login has expired and can't be renewed, for example because you signed out elsewhere. Choose <strong>Re-authenticate…</strong> from the menu to sign in again.</p>
+    </details>
+    <details>
+      <summary>"rate-limited"</summary>
+      <p>Anthropic's usage service asked the app to wait. The app backs off for as long as the service says, sometimes up to an hour, and then resumes on its own. You don't need to do anything.</p>
+    </details>
+    <details>
+      <summary>"err:401", "err:403" or another error</summary>
+      <p>The login token was rejected. Choose <strong>Re-authenticate…</strong>, or run <code>claude /login</code> in Terminal. If it keeps happening, please <a href="https://github.com/victor-shammas/claude-usage-meter/issues">open an issue</a>.</p>
+    </details>
+    <details>
+      <summary>Why are there only two numbers in my menu bar, not three?</summary>
+      <p>The third figure (for example <code>F5</code>) appears only when your plan has a separate weekly cap for a specific model. Without one, the app shows the 5-hour and weekly figures only.</p>
+    </details>
+
+    <h2 id="updates">Updates</h2>
+    <details>
+      <summary>How does the app update?</summary>
+      <p>Once a day it checks GitHub for a new version and offers to install it. You can also choose <strong>Check for Updates…</strong> from the menu at any time. Updates are signed, and the app verifies the signature before installing. Version 1.4.0 can't update itself, so if you have it, download the latest version once by hand.</p>
+    </details>
+
+    <h2 id="remove">Removing the app</h2>
+    <details open>
+      <summary>How do I uninstall it?</summary>
+      <ol>
+        <li>Click the meter and turn off <strong>Launch at Login</strong>, then choose <strong>Quit</strong>.</li>
+        <li>Drag Claude Usage Meter from Applications to the Trash.</li>
+        <li>Optional: remove its preferences with <code>defaults delete io.github.victor-shammas.claude-usage-meter</code> in Terminal.</li>
+      </ol>
+      <p>Your Claude Code login belongs to Claude Code, so it stays where it is.</p>
+    </details>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <nav aria-label="Footer"><a href="./">Home</a><a href="support.html">Support</a><a href="privacy.html">Privacy Policy</a><a href="https://github.com/victor-shammas/claude-usage-meter">GitHub</a><a href="mailto:contact+claude-usage-meter@victorshammas.com">Contact</a></nav>
+    <p>Claude Usage Meter is an independent, open-source app. It is not affiliated with, endorsed by or sponsored by Anthropic. Claude and Claude Code are trademarks of Anthropic, PBC. Mac is a trademark of Apple Inc.</p>
+    <p>© 2026 Victor Shammas</p>
+  </div>
+</footer>
+</body>
+</html>
