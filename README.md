@@ -1,6 +1,6 @@
-# claude-usage-menubar
+# Claude Usage Meter
 
-A macOS menu bar widget that shows your Claude usage quota at a glance.
+A macOS menu bar app that shows your Claude usage quota at a glance.
 
 ![menu bar screenshot](screenshots/menubar.png)
 
@@ -14,52 +14,63 @@ Click it to see progress bars and time until each window resets.
 
 ![dropdown screenshot](screenshots/dropdown.png)
 
-## Prerequisites
-
-- macOS
-- Python 3.9+
-- [Claude Code](https://docs.claude.com/en/docs/claude-code) installed and logged in with a Claude subscription (Pro, Max, Team, or Enterprise)
-
-You must be authenticated via OAuth — this is the default when you select **"Claude account with subscription"** during `claude /login` in Claude Code.
-
 ## Install
 
+1. Download **ClaudeUsageMeter-x.y.z.dmg** from the [latest release](https://github.com/victor-shammas/claude-usage-meter/releases/latest).
+2. Open it and drag **Claude Usage Meter** into **Applications**.
+3. Launch it from Applications. The meter appears in the menu bar. It has no Dock icon.
+4. Click the meter and choose **Launch at Login** to start it automatically. It then shows up under System Settings → General → Login Items.
+
+The app is signed with a Developer ID and notarized by Apple, so it opens without Gatekeeper warnings.
+
+### Requirements
+
+- A Mac with Apple Silicon running macOS 26 or later (Intel Macs and older macOS versions can [run from source](#run-from-source))
+- [Claude Code](https://docs.claude.com/en/docs/claude-code) installed and logged in with a Claude subscription (Pro, Max, Team, or Enterprise)
+
+You must be authenticated via OAuth — this is the default when you select **"Claude account with subscription"** during `claude /login` in Claude Code. The app reads the same credentials Claude Code stores, so there's nothing to configure.
+
+### Upgrading from the Python script version (v1.3.0 and earlier)
+
+Remove the old LaunchAgent first, or you'll get two meters:
+
 ```bash
-git clone https://github.com/victor-shammas/claude-usage-menubar.git
-cd claude-usage-menubar
+launchctl unload ~/Library/LaunchAgents/com.claude-usage-menubar.plist
+rm ~/Library/LaunchAgents/com.claude-usage-menubar.plist
+```
+
+### Meter not visible?
+
+On MacBooks with a notch, macOS hides menu bar items that would sit under the camera housing when the menu bar is crowded. If the app is running (it's listed in Activity Monitor) but you can't see the meter, free up space by quitting or hiding other menu bar items: hold **Cmd** and drag them out of the menu bar, or use System Settings → Menu Bar.
+
+## Run from source
+
+Requires Python 3.9+.
+
+```bash
+git clone https://github.com/victor-shammas/claude-usage-meter.git
+cd claude-usage-meter
+./install.sh
+```
+
+`install.sh` installs the dependencies (`rumps`, `pyobjc-framework-Cocoa`) and registers a LaunchAgent so the script starts at login. To run it once in the foreground instead:
+
+```bash
 pip3 install -r requirements.txt
-```
-
-If you get an `externally-managed-environment` error (common with Homebrew Python):
-
-```bash
-pip3 install --user --break-system-packages -r requirements.txt
-```
-
-## Run
-
-```bash
 python3 claude_menubar.py
 ```
 
-## Run on login (recommended)
+If pip reports an `externally-managed-environment` error (common with Homebrew Python), use `pip3 install --user --break-system-packages -r requirements.txt`.
 
-To start automatically and survive reboots:
-
-```bash
-# Edit the plist to match your Python and script paths
-nano com.claude-usage-menubar.plist
-
-# Install it
-cp com.claude-usage-menubar.plist ~/Library/LaunchAgents/
-launchctl load ~/Library/LaunchAgents/com.claude-usage-menubar.plist
-```
-
-To stop:
+To stop the LaunchAgent:
 
 ```bash
 launchctl unload ~/Library/LaunchAgents/com.claude-usage-menubar.plist
 ```
+
+### Building the app
+
+`packaging/build_release.sh` builds `Claude Usage Meter.app` with PyInstaller, signs it with your Developer ID (hardened runtime), notarizes and staples it, and packages a signed DMG in `dist/`. It uses Homebrew's Python (so the app is Apple Silicon only and requires the macOS release that Python was built for) and a notarytool keychain profile (named `notary`, or set `NOTARY_PROFILE`). Pass `--no-notarize` for a quick signed local build.
 
 ## How it finds your token
 
@@ -94,7 +105,7 @@ The app polls an undocumented Anthropic endpoint (`api.anthropic.com/api/oauth/u
 
 ## Configuration
 
-Edit these constants at the top of `claude_menubar.py`:
+When running from source, edit these constants at the top of `claude_menubar.py`:
 
 | Constant | Default | Description |
 |---|---|---|
@@ -121,16 +132,25 @@ The usage endpoint returns a 429 ban (sometimes for nearly an hour) if it's hit 
 To check exactly what the endpoint is returning at any moment:
 
 ```bash
-python3 claude_menubar.py --check
+python3 claude_menubar.py --check   # from a source checkout
 ```
 
 This prints the credential source, token expiry, the User-Agent, and the raw HTTP status/body — without starting the menu bar or printing your token.
 
-**Python Dock icon showing**
+**Python Dock icon showing** (source version only)
 
 Install `pyobjc-framework-Cocoa` (included in `requirements.txt`). The app uses it to hide the Dock icon. If it's not installed, everything works but you'll see the Python rocket in the Dock.
 
 ## Changelog
+
+### v1.4.0
+
+- **Now ships as a signed, notarized Mac app.** Download the DMG, drag *Claude Usage Meter* to Applications, done. No Python, pip or LaunchAgent setup. Requires Apple Silicon and macOS 26+; other Macs can keep running from source.
+- **Renamed to Claude Usage Meter** (repository: `victor-shammas/claude-usage-meter`; old links redirect).
+- **Launch at Login toggle** in the dropdown (app version), registered with macOS's Login Items.
+- **Re-authenticate no longer needs Automation permission.** It now opens Terminal by handing it a one-shot `.command` script instead of scripting Terminal via AppleScript.
+- **About Claude Usage Meter** panel in the dropdown, with links to GitHub and to [Buy me a coffee](https://buymeacoffee.com/victorshammas).
+- **Quit** now has a **Cmd+Q** shortcut.
 
 ### v1.3.0
 

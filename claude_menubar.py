@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Claude Usage Menu Bar Widget
+Claude Usage Meter — macOS menu bar widget
 Shows Claude's 5-hour rolling window and 7-day weekly quota in the macOS menu bar.
 
 Reads OAuth credentials from (first match wins):
@@ -16,10 +16,15 @@ Claude Code stays in sync.
 Requirements: pip install rumps pyobjc-framework-Cocoa
 """
 
+__version__ = "1.4.0"
+
+import getpass
 import json
 import os
+import shlex
 import subprocess
 import sys
+import tempfile
 import time
 import urllib.request
 import urllib.error
@@ -67,6 +72,10 @@ STARTUP_RETRY_INTERVAL = 4  # seconds between startup retries
 # and cap it with a timeout so a hang can never wedge the menu bar.
 CLAUDE_REFRESH_ARGS = []      # bare `claude`; the refresh happens at startup
 CLAUDE_REFRESH_TIMEOUT = 20   # seconds (safety cap; it normally exits in ~1-3s)
+
+# Links shown in the About panel's credits.
+DONATE_URL = "https://buymeacoffee.com/victorshammas"
+REPO_URL = "https://github.com/victor-shammas/claude-usage-meter"
 
 
 class NoTokenError(Exception):
@@ -176,7 +185,7 @@ def _keychain_read():
     try:
         result = subprocess.run(
             ["security", "find-generic-password",
-             "-s", KEYCHAIN_SERVICE, "-a", os.environ.get("USER", ""), "-w"],
+             "-s", KEYCHAIN_SERVICE, "-a", getpass.getuser(), "-w"],
             capture_output=True, text=True, timeout=5,
         )
         if result.returncode == 0 and result.stdout.strip():
@@ -189,7 +198,7 @@ def _keychain_read():
 def _keychain_write(data):
     subprocess.run(
         ["security", "add-generic-password", "-U",
-         "-s", KEYCHAIN_SERVICE, "-a", os.environ.get("USER", ""),
+         "-s", KEYCHAIN_SERVICE, "-a", getpass.getuser(),
          "-w", json.dumps(data)],
         capture_output=True, text=True, timeout=5,
     )
@@ -462,9 +471,31 @@ def format_row(label, block):
             f"{used}% used  (resets in {reset})")
 
 
+def _login_service():
+    """SMAppService for this app bundle, or None when not running as a .app.
+
+    SMAppService needs macOS 13+; older systems simply get no menu item.
+    """
+    if not getattr(sys, "frozen", False):
+        return None
+    try:
+        from ServiceManagement import SMAppService
+        return SMAppService.mainAppService()
+    except Exception:
+        return None
+
+
+def _launch_at_login_enabled():
+    service = _login_service()
+    if service is None:
+        return False
+    from ServiceManagement import SMAppServiceStatusEnabled
+    return service.status() == SMAppServiceStatusEnabled
+
+
 class ClaudeUsageApp(rumps.App):
     def __init__(self):
-        super().__init__("Claude Usage", quit_button=None)
+        super().__init__("Claude Usage Meter", quit_button=None)
         self.title = "…"
         self.usage_data = None
         self.last_error = None
@@ -482,6 +513,15 @@ class ClaudeUsageApp(rumps.App):
         # response actually carries a scoped limit for it, so accounts
         # without one never get a dangling empty row.
         self._fable_item = rumps.MenuItem("Fable 5", callback=self._noop)
+        # "Launch at Login" exists only for the bundled .app, which registers
+        # itself with macOS (System Settings > General > Login Items). The
+        # bare script is started at login by the LaunchAgent plist instead.
+        self._login_item = None
+        if _login_service() is not None:
+            self._login_item = rumps.MenuItem(
+                "Launch at Login", callback=self._toggle_launch_at_login,
+            )
+            self._login_item.state = _launch_at_login_enabled()
         self.menu = [
             rumps.MenuItem("5-Hour Window", callback=self._noop),
             rumps.MenuItem("Weekly Quota", callback=self._noop),
@@ -491,7 +531,9 @@ class ClaudeUsageApp(rumps.App):
             rumps.MenuItem("Refresh Now", callback=self.manual_refresh, key="r"),
             self._reauth_item,
             None,
-            rumps.MenuItem("Quit", callback=rumps.quit_application),
+            rumps.MenuItem("About Claude Usage Meter", callback=self._show_about),
+            *([self._login_item] if self._login_item else []),
+            rumps.MenuItem("Quit", callback=rumps.quit_application, key="q"),
         ]
         self._set_reauth_visible(False)
         self._set_fable_visible(False)
@@ -508,6 +550,82 @@ class ClaudeUsageApp(rumps.App):
     def _noop(self, _):
         pass
 
+    def _show_about(self, _):
+        """Standard macOS About panel, with donation and GitHub links."""
+        from AppKit import (
+            NSAboutPanelOptionApplicationIcon,
+            NSAboutPanelOptionApplicationName,
+            NSAboutPanelOptionApplicationVersion,
+            NSAboutPanelOptionCredits,
+            NSAboutPanelOptionVersion,
+            NSApplication,
+            NSColor,
+            NSFont,
+            NSFontAttributeName,
+            NSForegroundColorAttributeName,
+            NSImage,
+            NSLinkAttributeName,
+            NSMutableAttributedString,
+            NSMutableParagraphStyle,
+            NSParagraphStyleAttributeName,
+            NSTextAlignmentCenter,
+            NSURL,
+        )
+
+        style = NSMutableParagraphStyle.alloc().init()
+        style.setAlignment_(NSTextAlignmentCenter)
+        base = {
+            NSFontAttributeName: NSFont.systemFontOfSize_(NSFont.smallSystemFontSize()),
+            NSForegroundColorAttributeName: NSColor.secondaryLabelColor(),
+            NSParagraphStyleAttributeName: style,
+        }
+        credits = NSMutableAttributedString.alloc().init()
+
+        def append(text, url=None):
+            attrs = dict(base)
+            if url:
+                attrs[NSLinkAttributeName] = NSURL.URLWithString_(url)
+            credits.appendAttributedString_(
+                NSMutableAttributedString.alloc().initWithString_attributes_(text, attrs)
+            )
+
+        append("Your Claude usage limits, at a glance.\n\n")
+        append("Buy me a coffee", DONATE_URL)
+        append("  ·  ")
+        append("GitHub", REPO_URL)
+
+        options = {
+            NSAboutPanelOptionApplicationName: "Claude Usage Meter",
+            NSAboutPanelOptionApplicationVersion: __version__,
+            NSAboutPanelOptionVersion: "",  # no "(build)" suffix
+            NSAboutPanelOptionCredits: credits,
+            "Copyright": "MIT License · Victor Shammas",
+        }
+        # The .app carries its icon; a source checkout would otherwise show
+        # the Python rocket.
+        icon_path = Path(__file__).resolve().parent / "packaging" / "AppIcon.icns"
+        if not getattr(sys, "frozen", False) and icon_path.exists():
+            options[NSAboutPanelOptionApplicationIcon] = (
+                NSImage.alloc().initWithContentsOfFile_(str(icon_path))
+            )
+
+        # A menu-bar-only app isn't frontmost; activate so the panel isn't
+        # left behind other windows.
+        app = NSApplication.sharedApplication()
+        app.activateIgnoringOtherApps_(True)
+        app.orderFrontStandardAboutPanelWithOptions_(options)
+
+    def _toggle_launch_at_login(self, sender):
+        service = _login_service()
+        try:
+            if sender.state:
+                service.unregisterAndReturnError_(None)
+            else:
+                service.registerAndReturnError_(None)
+        except Exception:
+            pass
+        sender.state = _launch_at_login_enabled()
+
     def _set_reauth_visible(self, visible):
         try:
             self._reauth_item._menuitem.setHidden_(not visible)
@@ -521,17 +639,21 @@ class ClaudeUsageApp(rumps.App):
             pass
 
     def _launch_login(self, _):
-        """Open Terminal and run `claude /login` so the user can re-authenticate."""
+        """Open Terminal and run `claude /login` so the user can re-authenticate.
+
+        Opening a .command file hands it to Terminal without scripting it via
+        Apple Events, so the app needs no Automation permission (which a
+        signed .app would otherwise have to prompt for).
+        """
         claude_bin = _find_claude_bin() or "claude"
-        script = (
-            f'tell application "Terminal"\n'
-            f'  activate\n'
-            f'  do script "{claude_bin} /login"\n'
-            f'end tell'
-        )
         try:
+            fd, path = tempfile.mkstemp(prefix="claude-login-", suffix=".command")
+            with os.fdopen(fd, "w") as f:
+                f.write(f"#!/bin/zsh -l\nrm -f {shlex.quote(path)}\n"
+                        f"{shlex.quote(claude_bin)} /login\n")
+            os.chmod(path, 0o700)
             subprocess.Popen(
-                ["osascript", "-e", script],
+                ["open", "-a", "Terminal", path],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
             )
