@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude Usage Meter: your Claude limits in the Mac menu bar</title>
+<meta name="description" content="Claude Usage Meter is a free, open-source Mac menu bar app that shows your Claude 5-hour and weekly usage limits, with reset countdowns. It uses your existing Claude Code login.">
+<meta name="color-scheme" content="light dark">
+<meta property="og:title" content="Claude Usage Meter">
+<meta property="og:description" content="Your Claude usage limits, at a glance in the Mac menu bar. Free and open source.">
+<meta property="og:image" content="https://victorshammas.com/claude-usage-meter/icon.png">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="./"><img src="icon.png" alt="" width="30" height="30">Claude Usage Meter</a>
+    <nav class="nav" aria-label="Main">
+      <a href="#features" class="hide-sm">Features</a>
+      <a href="#privacy" class="hide-sm">Privacy</a>
+      <a href="support.html">Support</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <div>
+        <img class="hero-icon" src="icon.png" alt="Claude Usage Meter app icon" width="96" height="96">
+        <h1>Your Claude limits, always in view.</h1>
+        <p class="lede">Claude Usage Meter puts your 5-hour and weekly Claude usage in the Mac menu bar, so you know how much is left before you start the next big task, and when it resets.</p>
+        <div class="cta-row">
+          <a class="btn" href="https://github.com/victor-shammas/claude-usage-meter/releases/latest/download/ClaudeUsageMeter.dmg">Download for Mac <small>Free</small></a>
+          <span class="fineprint">macOS 26 or later · Apple silicon · Signed and notarized</span>
+        </div>
+      </div>
+
+      <figure class="mock" aria-label="Illustration of the Claude Usage Meter menu with sample numbers" role="img">
+        <div class="mock-bar"><b>5h:42%  7d:81%  F5:23%</b><span>Thu 9:41</span></div>
+        <div class="row"><span class="dot ok"></span><span class="label">5-Hour Window</span><span class="bar ok"><i style="width:42%"></i></span><span class="pct">42%</span>
+          <span class="meta">Resets in 3h 14m</span></div>
+        <div class="row"><span class="dot warn"></span><span class="label">Weekly Quota</span><span class="bar warn"><i style="width:81%"></i></span><span class="pct">81%</span>
+          <span class="meta">Resets in 2d 4h</span></div>
+        <div class="row"><span class="dot ok"></span><span class="label">Fable 5</span><span class="bar ok"><i style="width:23%"></i></span><span class="pct">23%</span>
+          <span class="meta">Resets in 2d 4h</span></div>
+        <div class="sep"></div>
+        <div class="item"><span>Last Updated: 9:41</span></div>
+        <div class="item"><span>Refresh Now</span><kbd>⌘R</kbd></div>
+        <div class="sep"></div>
+        <div class="item"><span>About Claude Usage Meter</span></div>
+        <div class="item"><span>Check for Updates</span></div>
+        <div class="item"><span>✓ Launch at Login</span></div>
+        <div class="sep"></div>
+        <div class="item"><span>Quit</span><kbd>⌘Q</kbd></div>
+        <p class="demo">Sample numbers</p>
+      </figure>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="wrap">
+      <h2>A meter, not a dashboard.</h2>
+      <p class="section-lede">One glance at the menu bar tells you whether to keep going or wait for the reset. Click it for the details.</p>
+      <div class="grid">
+        <div class="card"><h3>Both limit windows</h3><p>The rolling 5-hour window and the weekly quota, as percentages right in the menu bar, with a progress bar for each in the menu.</p></div>
+        <div class="card"><h3>Per-model caps</h3><p>When your plan has a separate weekly cap for a model, such as Fable 5, it gets its own row and menu bar figure. Plans without one never see an empty row.</p></div>
+        <div class="card"><h3>Reset countdowns</h3><p>Know exactly when each window resets, down to the minute.</p></div>
+        <div class="card"><h3>Colored at a glance</h3><p>Green, yellow, orange, red, so a filling quota is obvious before you open the menu.</p></div>
+        <div class="card"><h3>Looks after its login</h3><p>It renews the Claude Code login token it reads when that token expires, and backs off politely if the usage service asks it to wait. If you ever need to log in again, one click opens Terminal with <code>claude /login</code>.</p></div>
+        <div class="card"><h3>Free and open source</h3><p>MIT licensed, with the full source on GitHub. It updates itself, and starts at login if you want it to.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="how">
+    <div class="wrap">
+      <h2>How it works</h2>
+      <p class="section-lede">If Claude Code is on your Mac and signed in, there's nothing to set up.</p>
+      <div class="steps">
+        <div class="card"><h3>Install</h3><p>Open the DMG and drag Claude Usage Meter into Applications. It's signed and notarized by Apple, so it opens without warnings.</p></div>
+        <div class="card"><h3>It finds your login</h3><p>The app uses the sign-in Claude Code already keeps in your Keychain. No API key, no extra account.</p></div>
+        <div class="card"><h3>Glance and go</h3><p>The numbers refresh every five minutes. Turn on Launch at Login from the menu and forget about it.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="privacy">
+    <div class="wrap">
+      <h2>Talks to Anthropic, and no one else</h2>
+      <p class="section-lede">To show your limits, the app asks Anthropic's usage service, the same one Claude Code uses, with your own Claude Code login. Apart from checking GitHub for updates, it has no other servers, accounts or analytics.</p>
+      <ul class="checks">
+        <li>No accounts, no sign-in of its own</li>
+        <li>No analytics, tracking or ads</li>
+        <li>Your login token stays in your Keychain</li>
+        <li>Never reads your prompts, chats or code</li>
+        <li>Open source: read exactly what it does</li>
+        <li>About 140 KB of traffic a day</li>
+      </ul>
+      <p style="margin-top:22px"><a href="privacy.html">Read the full privacy policy</a></p>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap narrow">
+      <h2>Requirements</h2>
+      <ul>
+        <li>A Mac with Apple silicon, running macOS 26 or later. Other Macs can run it <a href="https://github.com/victor-shammas/claude-usage-meter#run-from-source">from source</a>.</li>
+        <li>Claude Code installed and signed in with a Claude subscription (Pro, Max, Team or Enterprise). Usage limits are reported for subscription plans, not API keys.</li>
+      </ul>
+      <p>Also tracking OpenAI Codex, or want pace forecasts and alerts? Take a look at <a href="https://victorshammas.com/gaugeline/">Gaugeline</a>.</p>
+      <p>Questions? See <a href="support.html">Support &amp; FAQ</a>.</p>
+    </div>
+  </section>
+</main>
+
+<section class="app-bar" aria-label="Apps by Victor Shammas">
+  <div class="wrap">
+    <div class="app-bar-head">
+      <p class="app-bar-title"><a href="https://victorshammas.com/apps/">Small, private apps by Victor Shammas</a></p>
+      <p class="app-bar-coffee">Enjoying one of these apps? <a href="https://buymeacoffee.com/victorshammas">Buy me a coffee</a>.</p>
+    </div>
+    <div class="app-tiles">
+      <a class="app-tile" href="https://victorshammas.com/plainview/"><img src="https://victorshammas.com/plainview/icon.png" alt="" width="44" height="44"><span><strong>Plainview</strong><small>A Markdown reader for the Mac</small></span></a>
+      <a class="app-tile" href="https://victorshammas.com/gaugeline/"><img src="https://victorshammas.com/gaugeline/icon.png" alt="" width="44" height="44"><span><strong>Gaugeline</strong><small>AI usage limits in your menu bar</small></span></a>
+      <a class="app-tile" href="https://victorshammas.com/quoth/"><img src="https://victorshammas.com/quoth/icon.png" alt="" width="44" height="44"><span><strong>Quoth</strong><small>Local voice transcription</small></span></a>
+      <a class="app-tile" href="https://victorshammas.com/staple/"><img src="https://victorshammas.com/staple/icon.png" alt="" width="44" height="44"><span><strong>Staple</strong><small>Substack, stapled together</small></span></a>
+      <a class="app-tile current" aria-current="page" href="https://victorshammas.com/claude-usage-meter/"><img src="https://victorshammas.com/claude-usage-meter/icon.png" alt="" width="44" height="44"><span><strong>Claude Usage Meter</strong><small>Claude limits, free and open source</small><em>You’re here</em></span></a>
+      <a class="app-tile" href="https://victorshammas.com/lectern/"><img src="https://victorshammas.com/lectern/icon.png" alt="" width="44" height="44"><span><strong>Lectern</strong><small>A presenter view for HTML slides</small></span></a>
+      <a class="app-tile" href="https://victorshammas.com/commonplace/"><img src="https://victorshammas.com/commonplace/icon.png" alt="" width="44" height="44"><span><strong>Commonplace</strong><small>Save links to Apple Notes</small></span></a>
+      <a class="app-tile" href="https://victorshammas.com/verbatim/"><img src="https://victorshammas.com/verbatim/icon.png" alt="" width="44" height="44"><span><strong>Verbatim</strong><small>Check quotations against sources</small></span></a>
+      <a class="app-tile" href="https://victorshammas.com/plainread/"><img src="https://victorshammas.com/plainread/icon.png" alt="" width="44" height="44"><span><strong>Plainread</strong><small>An EPUB reader for the Mac</small></span></a>
+      <a class="app-tile" href="https://victorshammas.com/ibid/"><img src="https://victorshammas.com/ibid/icon.png" alt="" width="44" height="44"><span><strong>Ibid</strong><small>Check citations against the bibliography</small></span></a>
+      <a class="app-tile" href="https://victorshammas.com/broadsheet/"><img src="https://victorshammas.com/broadsheet/icon.png" alt="" width="44" height="44"><span><strong>Broadsheet</strong><small>Web links, bound into a book</small></span></a>
+      <a class="app-tile" href="https://victorshammas.com/wordrange/"><img src="https://victorshammas.com/wordrange/icon.png" alt="" width="44" height="44"><span><strong>Wordrange</strong><small>Word counts the way journals count</small></span></a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <nav aria-label="Footer"><a href="./">Home</a><a href="support.html">Support</a><a href="privacy.html">Privacy Policy</a><a href="https://github.com/victor-shammas/claude-usage-meter">GitHub</a><a href="mailto:contact+claude-usage-meter@victorshammas.com">Contact</a></nav>
+    <p>Claude Usage Meter is an independent, open-source app. It is not affiliated with, endorsed by or sponsored by Anthropic. Claude and Claude Code are trademarks of Anthropic, PBC. Mac is a trademark of Apple Inc.</p>
+    <p>© 2026 Victor Shammas</p>
+  </div>
+</footer>
+</body>
+</html>
